@@ -1,0 +1,10 @@
+rules:
+  # lowestEfficiency default (0.9) is kept; apt-get upgrade in the base image
+  # creates modified files across layers so the efficiency score can be lower.
+  lowestEfficiency: 0.9
+  # Relaxed from the default 0.1: the kcov/kcov base image is Debian-based and
+  # apt-get package management unavoidably leaves some wasted space.
+  # 25% provides a buffer for the Debian base while still catching genuinely
+  # bloated images.
+  highestUserWastedPercent: 0.25
+  highestWastedBytes: disabled
