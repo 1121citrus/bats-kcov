@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# bats-coverage -- run bats under kcov and print a per-file coverage report.
+#
+# Usage: bats-coverage [--src <dir>] [--include <paths>] [--output <dir>]
+#                      <test.bats>...
+#
+# Options:
+#   --src <dir>       Source directory to parse for bash scripts.
+#                     Passed to kcov --bash-parse-files-in-dir.
+#                     Default: /code/src
+#   --include <paths> Comma-separated paths to include in the coverage
+#                     report.  Passed to kcov --include-path.
+#                     Default: same as --src
+#   --output <dir>    kcov output directory. Default: /tmp/coverage
+#
+# All positional arguments are passed to bats as test files.
+#
+# The kcov run is advisory: bats test failures do not prevent the
+# coverage report.  Exit status reflects only script errors, not
+# test outcomes.
+
+set -euo pipefail
+
+src=/code/src
+include=""
+output=/tmp/coverage
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --src)     src="$2";     shift 2 ;;
+        --include) include="$2"; shift 2 ;;
+        --output)  output="$2";  shift 2 ;;
+        --)        shift; break ;;
+        -*)        echo "Unknown option: $1" >&2; exit 1 ;;
+        *)         break ;;
+    esac
+done
+
+if [[ $# -eq 0 ]]; then
+    echo "Usage: bats-coverage [--src <dir>] [--include <paths>]" \
+         "[--output <dir>] <test.bats>..." >&2
+    exit 1
+fi
+
+# Default include-path to src when not explicitly set.
+include="${include:-${src}}"
+
+kcov \
+    --include-path="${include}" \
+    --bash-parse-files-in-dir="${src}" \
+    "${output}" \
+    bats "$@" >/dev/null 2>&1 || true
+
+cov=$(find "${output}" -maxdepth 2 -name coverage.json \
+          -not -path "*/kcov-merged/*" 2>/dev/null | head -1)
+
+[[ -n "${cov}" ]] || { echo "No coverage data" >&2; exit 0; }
+
+jq -r --arg src "${src}/" '
+  .files[] |
+  (.file | ltrimstr($src)) +
+  ": " + .percent_covered +
+  "% (" + .covered_lines +
+  "/" + .total_lines + " lines)"
+' "${cov}"
+
+jq -r '
+  "Overall: " +
+  (([.files[].covered_lines | tonumber] | add) | tostring) +
+  "/" +
+  (([.files[].total_lines | tonumber] | add) | tostring) +
+  " lines"
+' "${cov}"

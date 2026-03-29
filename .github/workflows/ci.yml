@@ -82,6 +82,8 @@ jobs:
         run: |
           docker inspect --format '{{json .Config.Entrypoint}}' "$IMAGE:latest" \
             | grep -Fx 'null'
+      - name: Verify bats-coverage is available
+        run: docker run --rm "$IMAGE:latest" bash -c 'bats-coverage 2>&1 | grep -q "^Usage:"'
       - name: Verify bash is directly invocable (entrypoint not interfering)
         run: docker run --rm "$IMAGE:latest" bash --version > /dev/null
 

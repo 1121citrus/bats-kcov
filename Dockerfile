@@ -17,7 +17,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-FROM ubuntu:22.04
+ARG KCOV_TAG=latest
+
+# hadolint ignore=DL3007
+FROM kcov/kcov:${KCOV_TAG}
 
 ARG VERSION=dev
 ENV BATS_KCOV_VERSION=${VERSION}
@@ -37,14 +40,18 @@ LABEL org.opencontainers.image.title="bats-kcov" \
       org.opencontainers.image.revision="${GIT_COMMIT}" \
       org.opencontainers.image.created="${BUILD_DATE}"
 
-# hadolint ignore=DL3008
+# Apply OS security patches to fix upstream CVEs in the kcov/kcov base image.
+# DL3005: apt-get upgrade is intentional — the base image is not rebuilt
+# frequently enough to stay current with security patches.
+# hadolint ignore=DL3005,DL3008
 RUN apt-get update -qq \
+        && apt-get upgrade -y --no-install-recommends \
         && apt-get install -y --no-install-recommends \
-            ca-certificates \
             bats \
             jq \
-            kcov \
         && rm -rf /var/lib/apt/lists/*
+
+COPY --chmod=755 bin/bats-coverage /usr/local/bin/bats-coverage
 
 ENTRYPOINT []
 CMD ["/bin/bash"]

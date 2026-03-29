@@ -6,15 +6,17 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # SYNOPSIS
-#   build [--push] [--version VERSION] [--platform PLATFORMS]
-#         [--registry REGISTRY] [--no-sbom] [--no-provenance]
-#         [--no-lint] [--no-test] [--no-smoke] [--no-scan]
+#   build [--push] [--version VERSION] [--kcov-tag TAG]
+#         [--platform PLATFORMS] [--registry REGISTRY]
+#         [--no-sbom] [--no-provenance]
+#         [--no-lint] [--no-test] [--no-smoke] [--no-coverage] [--no-scan]
 #         [--advise [ADVISEMENTS]] [--advice [ADVISEMENTS]] [--no-advise]
 #         [--cache CACHE_RULES]
 #         [--dry-run] [--help]
 #
 # OPTIONS
 #   --push              Push the image to the registry after a successful build.
+#   --kcov-tag TAG      kcov/kcov base image tag (default: latest).
 #                       Omitting this flag builds locally only (the default).
 #   --version VERSION   Tag the image with this version string, e.g. "1.2.3".
 #                       When omitted the image is tagged "dev-<git-short-sha>"
@@ -30,6 +32,8 @@
 #   --no-lint           Skip hadolint Dockerfile check.
 #   --no-test           Skip running the bats test suite.
 #   --no-smoke          Skip the built-image smoke test stage.
+#   --no-coverage       Skip the bats-coverage line-coverage report
+#                       (advisory only).
 #   --no-scan           Skip the Trivy vulnerability scan (gating).
 #                       Also skips advisements (stage 5) by default; pass
 #                       --advise after --no-scan to keep the advisory scans.
@@ -59,7 +63,9 @@
 #   The following env-var overrides take precedence over the defaults above but
 #   are themselves overridden by the matching CLI flag:
 #     BUILD_VERSION, BUILD_PUSH, BUILD_PLATFORM, BUILD_REGISTRY
-#     BUILD_LINT, BUILD_TEST, BUILD_SMOKE, BUILD_SCAN, BUILD_ADVISE
+#     BUILD_KCOV_TAG,
+#     BUILD_LINT, BUILD_TEST, BUILD_SMOKE, BUILD_COVERAGE,
+#     BUILD_SCAN, BUILD_ADVISE
 # PREREQUISITES
 #   • docker with the buildx plugin (≥ 0.10)
 #   • For --push: docker login <registry> must already be authenticated, plus
@@ -71,7 +77,8 @@
 #               markdownlint (*.md)
 #   2. Build  — single-platform --load into local Docker daemon
 #   3. Test   — bats test suite (runs in bats/bats:1.13.0 Docker container)
-#   3b. Smoke    — verify kcov, bats, and jq are present in the built image
+#   3b. Smoke    — verify kcov, bats, jq, and bats-coverage are in the image
+#   3c. Coverage — bats-coverage: per-file line coverage (advisory only)
 #   4. Scan   — Trivy CRITICAL/HIGH image scan (blocking; exit 1 on findings)
 #   5. Advise — multiple advisory scans (advisory only; never blocks the build)
 #              a) Grype   — full-severity scan
@@ -116,6 +123,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 PUSH=${BUILD_PUSH:-false}
 VERSION=${BUILD_VERSION:-}
+KCOV_TAG=${BUILD_KCOV_TAG:-latest}
 PLATFORMS=${BUILD_PLATFORM:-linux/amd64,linux/arm64}
 REGISTRY=${BUILD_REGISTRY:-1121citrus}
 SBOM=true
@@ -123,6 +131,7 @@ PROVENANCE=true
 LINT=${BUILD_LINT:-true}
 TEST=${BUILD_TEST:-true}
 SMOKE=${BUILD_SMOKE:-true}
+COVERAGE=${BUILD_COVERAGE:-true}
 SCAN=${BUILD_SCAN:-true}
 ADVISE_GRYPE=false
 ADVISE_SCOUT=false
@@ -290,6 +299,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --push)             PUSH=true ;;
         --version)          VERSION="$2"; shift ;;
+        --kcov-tag)         KCOV_TAG="$2"; shift ;;
         --platform)         PLATFORMS="$2"; shift ;;
         --registry)         REGISTRY="$2"; shift ;;
         --no-sbom)          SBOM=false ;;
@@ -297,6 +307,7 @@ while [[ $# -gt 0 ]]; do
         --no-lint)          LINT=false ;;
         --no-test)          TEST=false ;;
         --no-smoke)         SMOKE=false ;;
+        --no-coverage)      COVERAGE=false ;;
         --no-scan)          SCAN=false ;;
         --advise|--advice)
             _ADVISE_EXPLICIT=true
@@ -381,6 +392,9 @@ fi
 # Build-arg for the application version (stored in the image as an env var).
 version_build_arg=("--build-arg" "VERSION=${VERSION}")
 
+# Build-arg to pin the kcov/kcov base image tag.
+kcov_tag_build_arg=("--build-arg" "KCOV_TAG=${KCOV_TAG}")
+
 # ---------------------------------------------------------------------------
 # Helper: execute a command or print it for --dry-run.
 # ---------------------------------------------------------------------------
@@ -452,6 +466,7 @@ if [[ "${LINT}" == "true" ]]; then
         --workdir /mnt \
         "${SHELLCHECK_IMAGE}:${SHELLCHECK_TAG}" \
             build \
+            bin/bats-coverage \
             test/test_helper.bash
 
     echo "    markdownlint markdown files" >&2
@@ -475,6 +490,7 @@ build_cmd=(
     --platform "${host_platform}"
     "${tags[@]}"
     "${version_build_arg[@]}"
+    "${kcov_tag_build_arg[@]}"
     --load
 )
 
@@ -522,10 +538,44 @@ if [[ "${SMOKE}" == "true" ]]; then
         echo "[DRY RUN] docker run --rm '${full_image}:${VERSION}' kcov --version" >&2
         echo "[DRY RUN] docker run --rm '${full_image}:${VERSION}' bats --version" >&2
         echo "[DRY RUN] docker run --rm '${full_image}:${VERSION}' jq --version" >&2
+        echo "[DRY RUN] docker run --rm '${full_image}:${VERSION}' bash -c 'bats-coverage 2>&1 | grep -q Usage'" >&2
     else
         docker run --rm "${full_image}:${VERSION}" kcov --version
         docker run --rm "${full_image}:${VERSION}" bats --version
         docker run --rm "${full_image}:${VERSION}" jq --version
+        docker run --rm "${full_image}:${VERSION}" \
+            bash -c 'bats-coverage 2>&1 | grep -q "^Usage:"'
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Stage 3c: Coverage (bats-coverage — advisory, never blocks)
+#
+# Runs the bats test suite through bats-coverage (kcov + bats + jq bundled
+# in the just-built image) to produce a per-file line-coverage report.
+# Uses --src /code because this project has no src/ subdirectory — the
+# bash source files (build, bin/bats-coverage) live at the repo root.
+# Requires SYS_PTRACE; works on macOS Docker Desktop with the flags below.
+# ---------------------------------------------------------------------------
+if [[ "${TEST}" == "true" && "${COVERAGE}" == "true" ]]; then
+    echo "==> Stage 3c: Coverage" >&2
+
+    if [[ "${DRY_RUN}" == "true" ]]; then
+        echo "[DRY RUN] docker run --rm --cap-add SYS_PTRACE --security-opt seccomp=unconfined \\" >&2
+        echo "[DRY RUN]   -v ${script_dir}:/code:ro -w /code ${full_image}:${VERSION} \\" >&2
+        echo "[DRY RUN]   bats-coverage --src /code --include /code/build,/code/bin/bats-coverage test/03-build.bats" >&2
+    else
+        docker run --rm \
+            --cap-add SYS_PTRACE \
+            --security-opt seccomp=unconfined \
+            -v "${script_dir}:/code:ro" \
+            -w /code \
+            "${full_image}:${VERSION}" \
+            bats-coverage \
+                --src /code \
+                --include /code/build,/code/bin/bats-coverage \
+                test/03-build.bats \
+            >&2 || echo "    Coverage run failed (advisory only)" >&2
     fi
 fi
 
@@ -722,6 +772,7 @@ if [[ "${PUSH}" == "true" ]]; then
         --platform "${PLATFORMS}"
         "${tags[@]}"
         "${version_build_arg[@]}"
+        "${kcov_tag_build_arg[@]}"
         "--sbom=${SBOM}"
         "${provenance_flag}"
         --push

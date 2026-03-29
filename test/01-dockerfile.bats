@@ -42,8 +42,13 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
-@test "Dockerfile installs kcov" {
-    run grep -F "kcov" "${DOCKERFILE}"
+@test "Dockerfile uses kcov/kcov as base image" {
+    run grep -E '^FROM kcov/kcov' "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+}
+
+@test "Dockerfile copies bats-coverage to /usr/local/bin" {
+    run grep -F 'bin/bats-coverage /usr/local/bin/bats-coverage' "${DOCKERFILE}"
     [ "$status" -eq 0 ]
 }
 

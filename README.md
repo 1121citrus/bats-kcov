@@ -13,9 +13,9 @@ which lines are executed.
 
 - [Synopsis](#synopsis)
 - [Usage](#usage)
-  - [Measuring bats test coverage](#measuring-bats-test-coverage)
-  - [Extracting coverage data](#extracting-coverage-data)
+  - [bats-coverage (recommended)](#bats-coverage-recommended)
   - [Integration with a build script](#integration-with-a-build-script)
+  - [Direct kcov invocation](#direct-kcov-invocation)
 - [Build arguments](#build-arguments)
 - [Requirements](#requirements)
 - [Building](#building)
@@ -34,9 +34,69 @@ coverage without an inline image build step:
 
 ## Usage
 
-### Measuring bats test coverage
+### bats-coverage (recommended)
 
-Mount your project read-only and run kcov with bats as the test runner:
+The image ships `bats-coverage`, a command that runs the bats suite under kcov
+and prints a per-file line-coverage report. Pass `--src` to set the directory
+to measure (default: `/code/src`):
+
+```sh
+docker run --rm \
+    --cap-add SYS_PTRACE \
+    --security-opt seccomp=unconfined \
+    -v "$PWD:/code:ro" \
+    -w /code \
+    1121citrus/bats-kcov \
+    bats-coverage test/01-unit.bats test/02-functional.bats
+```
+
+Output:
+
+```text
+rotate.sh: 87.5% (42/48 lines)
+helpers.sh: 100% (12/12 lines)
+Overall: 54/60 lines
+```
+
+The `--security-opt seccomp=unconfined` flag is required on macOS Docker
+Desktop (and many CI environments) because kcov uses `ptrace(2)` calls that
+the default seccomp profile blocks.
+
+#### Options
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `--src <dir>` | `/code/src` | Directory to measure — passed to kcov `--include-path` and `--bash-parse-files-in-dir` |
+| `--output <dir>` | `/tmp/coverage` | kcov output directory |
+
+### Integration with a build script
+
+Drop-in replacement for the inline `docker build` pattern:
+
+```bash
+# Before: inline build adds bats + jq to kcov/kcov at build time.
+_img=$(docker build --quiet - <<EOF
+FROM kcov/kcov:latest
+RUN apt-get update -qq && apt-get install -y bats jq \
+    && rm -rf /var/lib/apt/lists/*
+EOF
+)
+docker run --rm --cap-add SYS_PTRACE --security-opt seccomp=unconfined \
+    -v "$PWD:/code:ro" -w /code "${_img}" bash -c 'kcov ... bats ...'
+
+# After: use bats-coverage directly.
+docker run --rm \
+    --cap-add SYS_PTRACE \
+    --security-opt seccomp=unconfined \
+    -v "$PWD:/code:ro" \
+    -w /code \
+    1121citrus/bats-kcov \
+    bats-coverage test/*.bats
+```
+
+### Direct kcov invocation
+
+For full control over kcov flags, invoke kcov directly:
 
 ```sh
 docker run --rm \
@@ -51,64 +111,6 @@ docker run --rm \
              /tmp/coverage \
              bats test/01-unit.bats test/02-functional.bats
     '
-```
-
-The `--security-opt seccomp=unconfined` flag is required on macOS Docker
-Desktop (and many CI environments) because kcov uses `ptrace(2)` calls that
-the default seccomp profile blocks.
-
-### Extracting coverage data
-
-kcov writes a `coverage.json` file alongside HTML reports. Use `jq` to
-extract per-file line coverage percentages:
-
-```sh
-docker run --rm \
-    --cap-add SYS_PTRACE \
-    --security-opt seccomp=unconfined \
-    -v "$PWD:/code:ro" \
-    -w /code \
-    1121citrus/bats-kcov \
-    bash -euo pipefail -c '
-        kcov --include-path=/code/src \
-             --bash-parse-files-in-dir=/code/src \
-             /tmp/coverage \
-             bats test/*.bats >/dev/null 2>&1 || true
-        cov=$(find /tmp/coverage -maxdepth 2 -name coverage.json \
-                  -not -path "*/kcov-merged/*" 2>/dev/null | head -1)
-        [[ -n "${cov}" ]] || { echo "No coverage data"; exit 0; }
-        jq -r "
-          .files[] |
-          (.file | ltrimstr(\"/code/src/\")) +
-          \": \" + .percent_covered +
-          \"% (\" + .covered_lines +
-          \"/\" + .total_lines + \" lines)\"
-        " "${cov}"
-        jq -r "
-          \"Overall: \" +
-          (([.files[].covered_lines | tonumber] | add) | tostring) +
-          \"/\" +
-          (([.files[].total_lines | tonumber] | add) | tostring) +
-          \" lines\"
-        " "${cov}"
-    '
-```
-
-### Integration with a build script
-
-This image is designed as a drop-in replacement for the inline Dockerfile
-pattern:
-
-```bash
-# Before: inline build adds bats + jq to kcov/kcov at build time.
-_img=$(docker build --quiet - <<EOF
-FROM kcov/kcov:latest
-RUN apt-get update -qq && apt-get install -y bats jq && rm -rf /var/lib/apt/lists/*
-EOF
-)
-
-# After: use the pre-built image directly.
-_img=1121citrus/bats-kcov:latest
 ```
 
 ## Build arguments
