@@ -85,7 +85,7 @@ Inline job. Downloads the built artifact and verifies the image packaging:
 - `kcov` — available and runnable
 - `bats` — available and runnable
 - `jq` — available and runnable
-- `ENTRYPOINT` — confirmed empty (allows arbitrary commands)
+- `ENTRYPOINT` — confirmed `null` (cleared; allows arbitrary commands)
 
 ---
 

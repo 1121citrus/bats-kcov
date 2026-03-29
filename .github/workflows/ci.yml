@@ -75,11 +75,15 @@ jobs:
         run: docker run --rm "$IMAGE:latest" bats --version
       - name: Verify jq is available
         run: docker run --rm "$IMAGE:latest" jq --version
-      - name: Run image smoke test
+      - name: Verify entrypoint is cleared (null)
+        # ENTRYPOINT [] in a Dockerfile is stored by Docker as a nil Go slice,
+        # which json-encodes as null — not [].  A non-null value here means the
+        # kcov/kcov base entrypoint was not successfully reset.
         run: |
           docker inspect --format '{{json .Config.Entrypoint}}' "$IMAGE:latest" \
-            | grep -Fx '[]'
-          docker run --rm "$IMAGE:latest" bash --version > /dev/null
+            | grep -Fx 'null'
+      - name: Verify bash is directly invocable (entrypoint not interfering)
+        run: docker run --rm "$IMAGE:latest" bash --version > /dev/null
 
   # ── Stage 4: Security scan ─────────────────────────────────────────────────
   scan:
