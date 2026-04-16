@@ -165,18 +165,6 @@ setup() {
     [[ "$output" == *"Stage 2: Build"* ]]
 }
 
-@test "build --dry-run passes KCOV_TAG build-arg" {
-    run "${BUILD_SCRIPT}" --dry-run --no-lint --no-test --no-scan 2>&1
-    [[ $status -eq 0 ]]
-    [[ "$output" == *"KCOV_TAG="* ]]
-}
-
-@test "build --kcov-tag overrides default KCOV_TAG" {
-    run "${BUILD_SCRIPT}" --kcov-tag v42 --dry-run --no-lint --no-test --no-scan 2>&1
-    [[ $status -eq 0 ]]
-    [[ "$output" == *"KCOV_TAG=v42"* ]]
-}
-
 @test "build --dry-run with --no-smoke skips smoke stage" {
     run "${BUILD_SCRIPT}" \
         --dry-run --no-lint --no-test --no-smoke --no-scan 2>&1

@@ -76,7 +76,7 @@ Drop-in replacement for the inline `docker build` pattern:
 ```bash
 # Before: inline build adds bats + jq to kcov/kcov at build time.
 _img=$(docker build --quiet - <<EOF
-FROM kcov/kcov:latest
+FROM kcov/kcov:v42
 RUN apt-get update -qq && apt-get install -y bats jq \
     && rm -rf /var/lib/apt/lists/*
 EOF

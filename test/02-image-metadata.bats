@@ -17,11 +17,6 @@ setup() {
     DOCKERFILE="${repo_root}/Dockerfile"
 }
 
-@test "Dockerfile declares ARG KCOV_TAG" {
-    run grep -E '^ARG KCOV_TAG=' "${DOCKERFILE}"
-    [ "$status" -eq 0 ]
-}
-
 @test "Dockerfile declares ARG VERSION" {
     run grep -E '^ARG VERSION=' "${DOCKERFILE}"
     [ "$status" -eq 0 ]

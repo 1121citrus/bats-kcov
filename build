@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # SYNOPSIS
-#   build [--push] [--version VERSION] [--kcov-tag TAG]
+#   build [--push] [--version VERSION]
 #         [--platform PLATFORMS] [--registry REGISTRY]
 #         [--no-sbom] [--no-provenance]
 #         [--no-lint] [--no-test] [--no-smoke] [--no-coverage] [--no-scan]
@@ -16,8 +16,6 @@
 #
 # OPTIONS
 #   --push              Push the image to the registry after a successful build.
-#   --kcov-tag TAG      kcov/kcov base image tag (default: latest).
-#                       Omitting this flag builds locally only (the default).
 #   --version VERSION   Tag the image with this version string, e.g. "1.2.3".
 #                       When omitted the image is tagged "dev-<git-short-sha>"
 #                       so that local builds are never confused with released
@@ -63,7 +61,6 @@
 #   The following env-var overrides take precedence over the defaults above but
 #   are themselves overridden by the matching CLI flag:
 #     BUILD_VERSION, BUILD_PUSH, BUILD_PLATFORM, BUILD_REGISTRY
-#     BUILD_KCOV_TAG,
 #     BUILD_LINT, BUILD_TEST, BUILD_SMOKE, BUILD_COVERAGE,
 #     BUILD_SCAN, BUILD_ADVISE
 # PREREQUISITES
@@ -123,7 +120,6 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 PUSH=${BUILD_PUSH:-false}
 VERSION=${BUILD_VERSION:-}
-KCOV_TAG=${BUILD_KCOV_TAG:-latest}
 PLATFORMS=${BUILD_PLATFORM:-linux/amd64,linux/arm64}
 REGISTRY=${BUILD_REGISTRY:-1121citrus}
 SBOM=true
@@ -299,7 +295,6 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --push)             PUSH=true ;;
         --version)          VERSION="$2"; shift ;;
-        --kcov-tag)         KCOV_TAG="$2"; shift ;;
         --platform)         PLATFORMS="$2"; shift ;;
         --registry)         REGISTRY="$2"; shift ;;
         --no-sbom)          SBOM=false ;;
@@ -391,9 +386,6 @@ fi
 
 # Build-arg for the application version (stored in the image as an env var).
 version_build_arg=("--build-arg" "VERSION=${VERSION}")
-
-# Build-arg to pin the kcov/kcov base image tag.
-kcov_tag_build_arg=("--build-arg" "KCOV_TAG=${KCOV_TAG}")
 
 # ---------------------------------------------------------------------------
 # Helper: execute a command or print it for --dry-run.
@@ -490,7 +482,6 @@ build_cmd=(
     --platform "${host_platform}"
     "${tags[@]}"
     "${version_build_arg[@]}"
-    "${kcov_tag_build_arg[@]}"
     --load
 )
 
@@ -772,7 +763,6 @@ if [[ "${PUSH}" == "true" ]]; then
         --platform "${PLATFORMS}"
         "${tags[@]}"
         "${version_build_arg[@]}"
-        "${kcov_tag_build_arg[@]}"
         "--sbom=${SBOM}"
         "${provenance_flag}"
         --push

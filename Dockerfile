@@ -17,10 +17,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-ARG KCOV_TAG=latest
-
-# hadolint ignore=DL3007
-FROM kcov/kcov:${KCOV_TAG}
+# Pin to the latest stable release so Dependabot can track base-image updates.
+# Note: kcov/kcov:latest currently tracks a pre-release; v42 is the most
+# recent stable tag.
+FROM kcov/kcov:v42
 
 ARG VERSION=dev
 ENV BATS_KCOV_VERSION=${VERSION}

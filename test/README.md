@@ -41,7 +41,6 @@ expected content.
 | `Dockerfile cleans apt cache` | `rm -rf /var/lib/apt/lists/*` is present |
 | `ENTRYPOINT is reset to empty` | `ENTRYPOINT []` allows arbitrary commands |
 | `CMD defaults to /bin/bash` | `CMD ["/bin/bash"]` sets the default |
-| `README documents KCOV_TAG build-arg` | `KCOV_TAG` appears in `README.md` |
 | `README documents SYS_PTRACE` | `SYS_PTRACE` appears in `README.md` |
 
 ### 02-image-metadata.bats

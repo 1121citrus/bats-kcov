@@ -23,3 +23,18 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+
+  # ── Docker ──────────────────────────────────────────────────────────────────
+  # Tracks the kcov/kcov base image pinned directly in the FROM line.
+  # Note: kcov/kcov:latest currently tracks a pre-release; Dependabot will
+  # propose stable version bumps as new releases are tagged on Docker Hub.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "docker"
