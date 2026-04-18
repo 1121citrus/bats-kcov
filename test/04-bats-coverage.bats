@@ -141,3 +141,12 @@ setup() {
     while_line=$(grep -n '^while ' "${SCRIPT}" | head -1 | cut -d: -f1)
     [ "${jq_line}" -lt "${while_line}" ]
 }
+
+# ============================================================================
+# Issue 5: hadolint must use failure-threshold: error
+# ============================================================================
+
+@test ".hadolint.yaml failure-threshold is set to error" {
+    run grep -F 'failure-threshold: error' "${repo_root}/.hadolint.yaml"
+    [ "$status" -eq 0 ]
+}
