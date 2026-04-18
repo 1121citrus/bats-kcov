@@ -41,8 +41,12 @@ LABEL org.opencontainers.image.title="bats-kcov" \
       org.opencontainers.image.revision="${GIT_COMMIT}" \
       org.opencontainers.image.created="${BUILD_DATE}"
 
-# hadolint ignore=DL3018
-RUN apk add --no-cache \
+# DL3017: upgrade is intentional — applies Alpine security patches that
+# postdate the pinned base image digest; remove when upstream republishes.
+# DL3018: version pinning omitted; versions are managed via digest pin.
+# hadolint ignore=DL3017,DL3018
+RUN apk upgrade --no-cache \
+    && apk add --no-cache \
         bats \
         jq
 
