@@ -32,6 +32,11 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
+@test "Dockerfile sets WORKDIR to /code" {
+    run grep -F 'WORKDIR /code' "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+}
+
 @test "Dockerfile resets ENTRYPOINT to empty" {
     run grep -F 'ENTRYPOINT []' "${DOCKERFILE}"
     [ "$status" -eq 0 ]

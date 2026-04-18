@@ -39,6 +39,7 @@ expected content.
 | `Dockerfile installs bats` | `bats` is listed in the `apk add` block |
 | `Dockerfile installs jq` | `jq` is listed in the `apk add` block |
 | `Dockerfile uses apk --no-cache flag` | `--no-cache` eliminates the need for cache cleanup |
+| `Dockerfile sets WORKDIR to /code` | `WORKDIR /code` sets the default working directory |
 | `ENTRYPOINT is reset to empty` | `ENTRYPOINT []` allows arbitrary commands |
 | `CMD defaults to /bin/bash` | `CMD ["/bin/bash"]` sets the default |
 | `README documents SYS_PTRACE` | `SYS_PTRACE` appears in `README.md` |

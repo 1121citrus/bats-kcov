@@ -61,7 +61,6 @@ docker run --rm \
     --read-only \
     --tmpfs /tmp \
     -v "$PWD/src:/code/src:ro" \
-    -w /code \
     1121citrus/bats-kcov \
     bash -c 'kcov ...'
 ```

@@ -46,6 +46,8 @@ RUN apk add --no-cache \
         bats \
         jq
 
+WORKDIR /code
+
 COPY --chmod=755 bin/bats-coverage /usr/local/bin/bats-coverage
 
 ENTRYPOINT []
