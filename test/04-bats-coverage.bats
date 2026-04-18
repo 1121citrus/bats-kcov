@@ -150,3 +150,15 @@ setup() {
     run grep -F 'failure-threshold: error' "${repo_root}/.hadolint.yaml"
     [ "$status" -eq 0 ]
 }
+
+# ============================================================================
+# Issue 6: version.txt must match the latest CHANGELOG entry
+# ============================================================================
+
+@test "version.txt matches the latest version in CHANGELOG.md" {
+    version=$(cat "${repo_root}/version.txt")
+    # Extract the first version number from a '## [x.y.z]' heading.
+    changelog_version=$(grep -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' \
+        "${repo_root}/CHANGELOG.md" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+    [ "${version}" = "${changelog_version}" ]
+}
