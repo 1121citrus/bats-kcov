@@ -87,6 +87,10 @@ Inline job. Downloads the built artifact and verifies the image packaging:
 - `jq` — available and runnable
 - `bats-coverage` — available and prints usage (missing args → exit 1)
 - `ENTRYPOINT` — confirmed `null` (cleared; allows arbitrary commands)
+- **E2E** — `bats-coverage` runs `test/03-build.bats` inside the image under
+  kcov (`--cap-add SYS_PTRACE`) and verifies that an `Overall:` coverage
+  summary is printed.  This is the only test that exercises the full
+  kcov + bats + jq pipeline end-to-end.
 
 ---
 

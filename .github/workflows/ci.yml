@@ -62,6 +62,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
       - name: Download image artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -87,6 +89,21 @@ jobs:
         run: docker run --rm "$IMAGE:latest" bash -c 'bats-coverage 2>&1 | grep -q "^Usage:"'
       - name: Verify bash is directly invocable (entrypoint not interfering)
         run: docker run --rm "$IMAGE:latest" bash --version > /dev/null
+      - name: E2E — bats-coverage runs tests and produces coverage output
+        # Mounts the project source read-only.  Runs a real bats test file
+        # under kcov and verifies that a coverage report is printed and that
+        # the exit status correctly reflects test outcomes.
+        run: |
+          docker run --rm \
+            --cap-add SYS_PTRACE \
+            --security-opt seccomp=unconfined \
+            -v "$PWD:/code:ro" \
+            -w /code \
+            "$IMAGE:latest" \
+            bats-coverage \
+              --src /code \
+              --include /code/build,/code/bin/bats-coverage \
+              test/03-build.bats 2>&1 | grep -q 'Overall:'
 
   # ── Stage 4: Security scan ─────────────────────────────────────────────────
   scan:

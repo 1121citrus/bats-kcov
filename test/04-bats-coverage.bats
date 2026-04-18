@@ -55,3 +55,14 @@ setup() {
     run grep -F 'exit "${bats_rc}"' "${SCRIPT}"
     [ "$status" -eq 0 ]
 }
+
+# ============================================================================
+# Issue 2: coverage report must include an Overall summary line
+# ============================================================================
+
+@test "bats-coverage prints an Overall summary via jq" {
+    # The second jq block must emit 'Overall: ...' — this is the structural
+    # assertion that a coverage report summary is produced after each run.
+    run grep -F '"Overall: "' "${SCRIPT}"
+    [ "$status" -eq 0 ]
+}
