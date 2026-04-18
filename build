@@ -513,7 +513,8 @@ if [[ "${TEST}" == "true" ]]; then
         bats/bats:1.13.0 \
             test/01-dockerfile.bats \
             test/02-image-metadata.bats \
-            test/03-build.bats
+            test/03-build.bats \
+            test/04-bats-coverage.bats
 fi
 
 # ---------------------------------------------------------------------------

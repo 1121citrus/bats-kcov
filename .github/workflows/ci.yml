@@ -52,7 +52,8 @@ jobs:
             bats/bats:1.13.0 \
               test/01-dockerfile.bats \
               test/02-image-metadata.bats \
-              test/03-build.bats
+              test/03-build.bats \
+              test/04-bats-coverage.bats
 
   # ── Stage 3b: Image smoke test ─────────────────────────────────────────────
   # Verify that kcov, bats, and jq are present and executable in the built

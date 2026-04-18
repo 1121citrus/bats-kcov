@@ -15,9 +15,8 @@
 #
 # All positional arguments are passed to bats as test files.
 #
-# The kcov run is advisory: bats test failures do not prevent the
-# coverage report.  Exit status reflects only script errors, not
-# test outcomes.
+# Coverage is always reported regardless of test outcome.  Exit status
+# mirrors bats: non-zero when any test fails.
 
 set -euo pipefail
 
@@ -45,11 +44,14 @@ fi
 # Default include-path to src when not explicitly set.
 include="${include:-${src}}"
 
+# Run bats under kcov.  Capture exit status so it can be propagated after
+# the coverage report is printed.
+bats_rc=0
 kcov \
     --include-path="${include}" \
     --bash-parse-files-in-dir="${src}" \
     "${output}" \
-    bats "$@" >/dev/null 2>&1 || true
+    bats "$@" >/dev/null 2>&1 || bats_rc=$?
 
 cov=$(find "${output}" -maxdepth 2 -name coverage.json \
           -not -path "*/kcov-merged/*" 2>/dev/null | head -1)
@@ -71,3 +73,5 @@ jq -r '
   (([.files[].total_lines | tonumber] | add) | tostring) +
   " lines"
 ' "${cov}"
+
+exit "${bats_rc}"
