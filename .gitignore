@@ -1,0 +1,11 @@
+# OS artifacts
+.DS_Store
+.AppleDouble
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

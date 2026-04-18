@@ -159,13 +159,16 @@ current.
 
 ---
 
-## Automated releases (release-please)
+## Releases
 
-`release-please.yml` delegates to the shared `release-please.yml` workflow.
+Releases are created by pushing a git tag.  There is no automated release-PR
+workflow — tagging is done manually after QA passes on `dev`.
 
-### Configuration
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+# CI builds, tests, scans, and pushes 1121citrus/bats-kcov:1.0.0 + :1.0 + :1 + :latest
+```
 
-- `release-please-config.json` — release type and package root
-- `.release-please-manifest.json` — current version
-- `version.txt` — plain-text version file
-- `CHANGELOG.md` — generated/updated by release-please
+Update `version.txt` and add a `CHANGELOG.md` entry to match the tag before
+pushing.
