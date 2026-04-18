@@ -55,6 +55,11 @@ base image, which upstream kcov does not currently provide.
 | `libcurl4` | 7.74.0-1.3+deb11u16 | CVE-2023-23914 | **Critical** | curl HSTS bypass via cleartext redirect |
 | `libdb5.3` | 5.3.28+dfsg1-0.8 | CVE-2019-8457 | **Critical** | Berkeley DB heap out-of-bounds read via crafted SQL |
 | `zlib1g` | 1:1.2.11.dfsg-2+deb11u2 | CVE-2023-45853 | **Critical** | zlib integer overflow in MiniZip minizip/zip.c |
+| `bash` | 5.1-2+deb11u1 | CVE-2022-3715 | High | bash heap buffer overflow in parameter transformation |
+| `dpkg` | 1.20.13 | CVE-2025-6297 | High | dpkg arbitrary file overwrite via crafted package |
+| `libc-bin`, `libc6` | 2.31-13+deb11u13 | CVE-2025-15281 | High | glibc buffer overflow in nscd |
+| `libc-bin`, `libc6` | 2.31-13+deb11u13 | CVE-2026-0861 | High | glibc use-after-free in getaddrinfo |
+| `libc-bin`, `libc6` | 2.31-13+deb11u13 | CVE-2026-0915 | High | glibc stack overflow in iconv conversion |
 | `libcurl4` | 7.74.0-1.3+deb11u16 | CVE-2022-43551 | High | curl HSTS bypass with multiple redirects |
 | `libcurl4` | 7.74.0-1.3+deb11u16 | CVE-2022-42916 | High | curl HSTS bypass via IDN host name |
 | `libgcrypt20` | 1.8.7-6 | CVE-2021-33560 | High | ElGamal encryption side-channel (Manger attack) |

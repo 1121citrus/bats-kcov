@@ -69,7 +69,7 @@ the default seccomp profile blocks.
 | `--src <dir>` | `/code/src` | Directory containing bash source files. Passed to kcov `--bash-parse-files-in-dir` for static analysis. kcov reads this directory to build a list of all bash files so it can report 0% for files that were never executed. |
 | `--include <paths>` | same as `--src` | Comma-separated paths whose *execution* to count. Passed to kcov `--include-path`. Restricts the coverage report to these paths only. Set this to a subdirectory of `--src` when you want to exclude generated or vendor files from the report while still parsing the full source tree. Defaults to the same value as `--src`. |
 | `--output <dir>` | `/tmp/coverage` | kcov output directory |
-| `--min-coverage <n>` | _(disabled)_ | Fail with exit code 2 when overall line coverage is below `<n>` percent (integer or decimal). Tests still run and the report is still printed. |
+| `--min-coverage <n>` | *(disabled)* | Fail with exit code 2 when overall line coverage is below `<n>` percent (integer or decimal). Tests still run and the report is still printed. |
 
 **Exit codes:**
 
