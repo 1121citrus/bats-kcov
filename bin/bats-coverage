@@ -25,6 +25,14 @@
 
 set -euo pipefail
 
+# ---------------------------------------------------------------------------
+# Dependency check
+# ---------------------------------------------------------------------------
+if ! command -v jq &>/dev/null; then
+    echo "bats-coverage: jq is required but not found in PATH" >&2
+    exit 127
+fi
+
 src=/code/src
 include=""
 output=/tmp/coverage
@@ -50,6 +58,28 @@ fi
 
 # Default include-path to src when not explicitly set.
 include="${include:-${src}}"
+
+# ---------------------------------------------------------------------------
+# Input validation
+# ---------------------------------------------------------------------------
+if [[ ! -d "${src}" || ! -r "${src}" ]]; then
+    echo "bats-coverage: --src directory not readable: ${src}" >&2
+    exit 1
+fi
+
+output_parent=$(dirname "${output}")
+if [[ ! -d "${output_parent}" || ! -w "${output_parent}" ]]; then
+    echo "bats-coverage: output parent directory not writable: ${output_parent}" >&2
+    exit 1
+fi
+
+if [[ -n "${min_coverage}" ]]; then
+    if ! awk -v n="${min_coverage}" \
+             'BEGIN { exit (n ~ /^[0-9]+(\.[0-9]+)?$/ && n+0>=0 && n+0<=100) ? 0 : 1 }'; then
+        echo "bats-coverage: --min-coverage must be a number between 0 and 100" >&2
+        exit 1
+    fi
+fi
 
 # Run bats under kcov.  Capture exit status so it can be propagated after
 # the coverage report is printed.
