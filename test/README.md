@@ -35,10 +35,10 @@ expected content.
 
 | Test | What it checks |
 | --- | --- |
-| `apt-get update runs first` | `apt-get update` runs before package install |
-| `Dockerfile installs bats` | `bats` is listed in the `apt-get install` block |
-| `Dockerfile installs jq` | `jq` is listed in the `apt-get install` block |
-| `Dockerfile cleans apt cache` | `rm -rf /var/lib/apt/lists/*` is present |
+| `Dockerfile installs packages with apk` | `apk add` is used to install packages |
+| `Dockerfile installs bats` | `bats` is listed in the `apk add` block |
+| `Dockerfile installs jq` | `jq` is listed in the `apk add` block |
+| `Dockerfile uses apk --no-cache flag` | `--no-cache` eliminates the need for cache cleanup |
 | `ENTRYPOINT is reset to empty` | `ENTRYPOINT []` allows arbitrary commands |
 | `CMD defaults to /bin/bash` | `CMD ["/bin/bash"]` sets the default |
 | `README documents SYS_PTRACE` | `SYS_PTRACE` appears in `README.md` |

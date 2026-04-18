@@ -12,8 +12,8 @@ setup() {
     DOCKERFILE="${repo_root}/Dockerfile"
 }
 
-@test "Dockerfile runs apt-get update" {
-    run grep -F "apt-get update" "${DOCKERFILE}"
+@test "Dockerfile installs packages with apk" {
+    run grep -F "apk add" "${DOCKERFILE}"
     [ "$status" -eq 0 ]
 }
 
@@ -27,8 +27,8 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
-@test "Dockerfile cleans apt cache" {
-    run grep -F "rm -rf /var/lib/apt/lists/*" "${DOCKERFILE}"
+@test "Dockerfile uses apk --no-cache flag" {
+    run grep -F "apk add --no-cache" "${DOCKERFILE}"
     [ "$status" -eq 0 ]
 }
 
