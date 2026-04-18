@@ -26,8 +26,9 @@ should not be applied to production workloads.
 
 ## Base image CVEs
 
-`bats-kcov` is built on `kcov/kcov`, a Debian-based image. Debian system
-packages may contain CVEs with no available fix. These are accepted because:
+`bats-kcov` is built on `kcov/kcov:v42`, a Debian 11 (bullseye) image.
+Debian 11 reached end-of-life in June 2024; many of its package versions will
+never receive backported fixes. These CVEs are accepted because:
 
 - The image is a build tool, not a production runtime.
 - It runs in an isolated, short-lived container during CI.
@@ -35,9 +36,39 @@ packages may contain CVEs with no available fix. These are accepted because:
 - It is in the same trust category as other CI tool images
   (shellcheck, hadolint, bats/bats).
 
-Any Trivy findings against this image that block the scan stage represent newly
-fixable CVEs that should be remediated. See `SECURITY.md` in the active release
-for the current known-unfixed inventory.
+The Trivy scan stage (Stage 4) passes because it runs with `--ignore-unfixed`.
+The Grype advisory (Stage 5a) reports all findings including won't-fix items
+for visibility; the entries below are the known Critical/High won't-fix CVEs
+as of April 2026.
+
+Any new fixable Critical/High findings that appear in the Trivy gating scan
+must be remediated immediately.
+
+### Known unfixable Critical/High CVEs (Debian 11 won't-fix)
+
+All entries below carry `(won't fix)` in Debian's security tracker — they
+cannot be resolved without replacing `kcov/kcov:v42` with a Debian 12+
+base image, which upstream kcov does not currently provide.
+
+| Package | Version | CVE | Severity | Description |
+| --- | --- | --- | --- | --- |
+| `libcurl4` | 7.74.0-1.3+deb11u16 | CVE-2023-23914 | **Critical** | curl HSTS bypass via cleartext redirect |
+| `libdb5.3` | 5.3.28+dfsg1-0.8 | CVE-2019-8457 | **Critical** | Berkeley DB heap out-of-bounds read via crafted SQL |
+| `zlib1g` | 1:1.2.11.dfsg-2+deb11u2 | CVE-2023-45853 | **Critical** | zlib integer overflow in MiniZip minizip/zip.c |
+| `libcurl4` | 7.74.0-1.3+deb11u16 | CVE-2022-43551 | High | curl HSTS bypass with multiple redirects |
+| `libcurl4` | 7.74.0-1.3+deb11u16 | CVE-2022-42916 | High | curl HSTS bypass via IDN host name |
+| `libgcrypt20` | 1.8.7-6 | CVE-2021-33560 | High | ElGamal encryption side-channel (Manger attack) |
+| `libldap-2.4-2` | 2.4.57+dfsg-3+deb11u1 | CVE-2023-2953 | High | OpenLDAP slapd null pointer dereference |
+| `libldap-common` | 2.4.57+dfsg-3+deb11u1 | CVE-2023-2953 | High | OpenLDAP slapd null pointer dereference |
+| `libtasn1-6` | 4.16.0-2+deb11u2 | CVE-2025-13151 | High | libtasn1 heap buffer overflow |
+| `libzstd1` | 1.4.8+dfsg-2.1 | CVE-2022-4899 | High | zstd null pointer dereference via crafted input |
+
+### Remediation path
+
+The only path to resolving the above CVEs is a base-image upgrade.  Monitor
+the [kcov releases page](https://github.com/SimonKagstrom/kcov/releases) for
+a Debian 12 (bookworm) or Alpine-based image.  When available, update the
+`FROM` line and remove this table.
 
 ## Docker hardening
 
