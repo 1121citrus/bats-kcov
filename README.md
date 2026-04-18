@@ -66,8 +66,18 @@ the default seccomp profile blocks.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `--src <dir>` | `/code/src` | Directory to measure — passed to kcov `--include-path` and `--bash-parse-files-in-dir` |
+| `--src <dir>` | `/code/src` | Directory containing bash source files. Passed to kcov `--bash-parse-files-in-dir` for static analysis. |
+| `--include <paths>` | same as `--src` | Comma-separated paths whose execution to report. Passed to kcov `--include-path`. Usually matches `--src` unless coverage is wanted for only a subset of files. |
 | `--output <dir>` | `/tmp/coverage` | kcov output directory |
+| `--min-coverage <n>` | _(disabled)_ | Fail with exit code 2 when overall line coverage is below `<n>` percent (integer or decimal). Tests still run and the report is still printed. |
+
+**Exit codes:**
+
+| Code | Meaning |
+| ---- | ------- |
+| `0` | All tests passed (and coverage ≥ `--min-coverage` if set) |
+| `1` | One or more bats tests failed |
+| `2` | Coverage threshold not met (tests may have passed) |
 
 ### Integration with a build script
 

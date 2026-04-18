@@ -2,33 +2,40 @@
 # bats-coverage -- run bats under kcov and print a per-file coverage report.
 #
 # Usage: bats-coverage [--src <dir>] [--include <paths>] [--output <dir>]
-#                      <test.bats>...
+#                      [--min-coverage <pct>] <test.bats>...
 #
 # Options:
-#   --src <dir>       Source directory to parse for bash scripts.
-#                     Passed to kcov --bash-parse-files-in-dir.
-#                     Default: /code/src
-#   --include <paths> Comma-separated paths to include in the coverage
-#                     report.  Passed to kcov --include-path.
-#                     Default: same as --src
-#   --output <dir>    kcov output directory. Default: /tmp/coverage
+#   --src <dir>         Source directory to parse for bash scripts.
+#                       Passed to kcov --bash-parse-files-in-dir.
+#                       Default: /code/src
+#   --include <paths>   Comma-separated paths to include in the coverage
+#                       report.  Passed to kcov --include-path.
+#                       Default: same as --src
+#   --output <dir>      kcov output directory. Default: /tmp/coverage
+#   --min-coverage <n>  Fail (exit 2) when overall line coverage is below
+#                       <n> percent.  Accepts integers or decimals (0-100).
+#                       Disabled by default.
 #
 # All positional arguments are passed to bats as test files.
 #
-# Coverage is always reported regardless of test outcome.  Exit status
-# mirrors bats: non-zero when any test fails.
+# Coverage is always reported regardless of test outcome.  Exit status:
+#   0  all tests passed (and coverage >= --min-coverage if set)
+#   1  one or more bats tests failed
+#   2  coverage threshold not met (tests may have passed)
 
 set -euo pipefail
 
 src=/code/src
 include=""
 output=/tmp/coverage
+min_coverage=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --src)     src="$2";     shift 2 ;;
-        --include) include="$2"; shift 2 ;;
-        --output)  output="$2";  shift 2 ;;
+        --src)          src="$2";          shift 2 ;;
+        --include)      include="$2";      shift 2 ;;
+        --output)       output="$2";       shift 2 ;;
+        --min-coverage) min_coverage="$2"; shift 2 ;;
         --)        shift; break ;;
         -*)        echo "Unknown option: $1" >&2; exit 1 ;;
         *)         break ;;
@@ -37,7 +44,7 @@ done
 
 if [[ $# -eq 0 ]]; then
     echo "Usage: bats-coverage [--src <dir>] [--include <paths>]" \
-         "[--output <dir>] <test.bats>..." >&2
+         "[--output <dir>] [--min-coverage <pct>] <test.bats>..." >&2
     exit 1
 fi
 
@@ -73,5 +80,22 @@ jq -r '
   (([.files[].total_lines | tonumber] | add) | tostring) +
   " lines"
 ' "${cov}"
+
+# Enforce --min-coverage threshold if requested.
+if [[ -n "${min_coverage}" ]]; then
+    overall_pct=$(jq -r '
+      ([.files[].covered_lines | tonumber] | add) /
+      ([.files[].total_lines   | tonumber] | add) * 100
+    ' "${cov}")
+    # Use awk for the float comparison (bash cannot compare decimals).
+    if awk -v actual="${overall_pct}" -v threshold="${min_coverage}" \
+           'BEGIN { exit (actual >= threshold) ? 0 : 1 }'; then
+        : # coverage meets threshold
+    else
+        printf 'Coverage %.1f%% is below required %.1f%%\n' \
+               "${overall_pct}" "${min_coverage}" >&2
+        exit 2
+    fi
+fi
 
 exit "${bats_rc}"

@@ -66,3 +66,29 @@ setup() {
     run grep -F '"Overall: "' "${SCRIPT}"
     [ "$status" -eq 0 ]
 }
+
+# ============================================================================
+# Issue 3: --min-coverage threshold option
+# ============================================================================
+
+@test "bats-coverage accepts --min-coverage option" {
+    run grep -F -- '--min-coverage)' "${SCRIPT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "bats-coverage exits 2 when coverage is below threshold (documented)" {
+    run grep -F 'exit 2' "${SCRIPT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "bats-coverage --min-coverage is listed in usage output" {
+    run "${SCRIPT}" 2>&1
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"--min-coverage"* ]]
+}
+
+@test "bats-coverage prints threshold-failure message to stderr" {
+    # The failure message must name the actual and required percentages.
+    run grep -F 'below required' "${SCRIPT}"
+    [ "$status" -eq 0 ]
+}
