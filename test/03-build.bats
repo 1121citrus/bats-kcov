@@ -59,11 +59,10 @@ setup() {
 # Advisement option parsing tests
 # ============================================================================
 
-@test "build --advise scout enables Scout" {
-    run "${BUILD_SCRIPT}" \
-        --advise scout --dry-run --no-lint --no-test --no-scan 2>&1
-    [[ $status -eq 0 ]]
-    [[ "$output" == *"Stage 5b: Advise (Scout)"* ]]
+@test "build --advise scout is rejected (Scout is gating)" {
+    run "${BUILD_SCRIPT}" --advise scout 2>&1
+    [[ $status -eq 1 ]]
+    [[ "$output" == *"Unknown advisement"* ]]
 }
 
 @test "build --advise dive enables Dive" {
@@ -73,12 +72,12 @@ setup() {
     [[ "$output" == *"Stage 5c: Advise (Dive)"* ]]
 }
 
-@test "build --advise all enables Grype, Scout, and Dive" {
+@test "build --advise all enables Dive" {
     run "${BUILD_SCRIPT}" \
         --advise all --dry-run --no-lint --no-test --no-scan 2>&1
     [[ $status -eq 0 ]]
-    [[ "$output" == *"Stage 5a: Advise (Grype)"* ]]
-    [[ "$output" == *"Stage 5b: Advise (Scout)"* ]]
+    [[ "$output" != *"Stage 5a"* ]]
+    [[ "$output" != *"Stage 5b"* ]]
     [[ "$output" == *"Stage 5c: Advise (Dive)"* ]]
 }
 
@@ -102,9 +101,9 @@ setup() {
 
 @test "build --no-scan with explicit --advise keeps advisements" {
     run "${BUILD_SCRIPT}" \
-        --no-scan --advise grype --dry-run --no-lint --no-test 2>&1
+        --no-scan --advise dive --dry-run --no-lint --no-test 2>&1
     [[ $status -eq 0 ]]
-    [[ "$output" == *"Stage 5a: Advise (Grype)"* ]]
+    [[ "$output" == *"Stage 5c: Advise (Dive)"* ]]
 }
 
 @test "build --advice is accepted as a synonym for --advise" {
