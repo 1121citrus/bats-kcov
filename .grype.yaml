@@ -1,0 +1,98 @@
+# Grype scan configuration for bats-kcov.
+#
+# The gating scan (Stage 4b) mirrors the Trivy policy: block on CRITICAL/HIGH
+# only, and ignore CVEs that have no fix available in the current Alpine 3.20
+# package repository.  The base image is kcov/kcov:latest-alpine (Alpine 3.20),
+# pinned by digest; `apk upgrade` is run at build time to apply all available
+# patches.  The CVEs below remain after the upgrade because Alpine 3.20 has
+# not yet published fixes for them.  Each will be re-evaluated when the pinned
+# digest is updated to a newer kcov/kcov image.
+#
+# Documented in SECURITY.md §"Base image CVEs".
+
+fail-on-severity: "high"
+
+ignore:
+
+  # binutils / binutils-dev 2.42-r1 — no fix in Alpine 3.20.
+  # kcov requires binutils for ELF/DWARF inspection; pulled in by the upstream
+  # kcov/kcov base image and cannot be removed.  binutils-dev is a split
+  # package that carries the same CVEs.
+  - vulnerability: CVE-2025-69650
+    package:
+      name: binutils
+      type: apk
+  - vulnerability: CVE-2025-69650
+    package:
+      name: binutils-dev
+      type: apk
+  - vulnerability: CVE-2025-69649
+    package:
+      name: binutils
+      type: apk
+  - vulnerability: CVE-2025-69649
+    package:
+      name: binutils-dev
+      type: apk
+  - vulnerability: CVE-2025-5245
+    package:
+      name: binutils
+      type: apk
+  - vulnerability: CVE-2025-5245
+    package:
+      name: binutils-dev
+      type: apk
+  - vulnerability: CVE-2025-5244
+    package:
+      name: binutils
+      type: apk
+  - vulnerability: CVE-2025-5244
+    package:
+      name: binutils-dev
+      type: apk
+
+  # jq 1.7.1-r0 — fixed in Alpine 3.22 (jq 1.8.1-r0); no backport to 3.20.
+  - vulnerability: CVE-2024-53427
+    package:
+      name: jq
+      type: apk
+  - vulnerability: CVE-2025-48060
+    package:
+      name: jq
+      type: apk
+
+  # curl ≤8.14.1-r2 — no fix published in Alpine 3.20 at time of writing.
+  - vulnerability: CVE-2026-3805
+    package:
+      name: curl
+      type: apk
+
+  # c-ares ≤1.33.1-r0 — no fix in Alpine 3.20; c-ares is a curl dependency.
+  - vulnerability: CVE-2025-31498
+    package:
+      name: c-ares
+      type: apk
+
+  # sqlite-libs 3.45.3-r3 — no fix in Alpine 3.20.
+  # Package name in the Alpine APK database is sqlite-libs, not sqlite.
+  - vulnerability: CVE-2025-70873
+    package:
+      name: sqlite-libs
+      type: apk
+  - vulnerability: CVE-2025-3277
+    package:
+      name: sqlite-libs
+      type: apk
+
+  # nghttp2 ≤1.62.1-r0 — no fix in Alpine 3.20; nghttp2 is a curl dependency.
+  - vulnerability: CVE-2026-27135
+    package:
+      name: nghttp2
+      type: apk
+
+  # python3 3.12.13-r0 — no fix in Alpine 3.20.
+  # kcov/kcov base image includes Python; cannot be removed.
+  - vulnerability: CVE-2025-13836
+    package:
+      name: python3
+      type: apk

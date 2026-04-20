@@ -34,8 +34,31 @@ The Trivy gating scan (Stage 4) must pass with zero unfixed Critical/High
 findings. Any new fixable findings must be remediated immediately by updating
 the pinned digest to the latest `latest-alpine` image.
 
-The Grype advisory (Stage 5a) is non-gating and reports all findings for
-visibility. Alpine-based findings are expected to be minimal.
+The Grype gating scan (Stage 4b) mirrors the Trivy policy: only Critical/High
+findings block the build (`fail-on-severity: high`), and CVEs with no fix
+available in Alpine 3.20 are ignored via `.grype.yaml`. When the pinned digest
+is updated, re-evaluate the ignore list and remove entries that are now fixed.
+
+### Known unfixed CVEs (Alpine 3.20)
+
+The following HIGH CVEs have no patch in Alpine 3.20 at the current pinned
+digest and are suppressed in `.grype.yaml`.  Remove each entry once the
+upstream Alpine package publishes a fix and the digest is updated.
+
+| Severity | CVE | Package | Reason |
+| --- | --- | --- | --- |
+| HIGH | CVE-2025-69650 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
+| HIGH | CVE-2025-69649 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
+| HIGH | CVE-2025-5245 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
+| HIGH | CVE-2025-5244 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
+| HIGH | CVE-2024-53427 | jq 1.7.1-r0 | Fixed in Alpine 3.22 (jq 1.8.1); no 3.20 backport |
+| HIGH | CVE-2025-48060 | jq 1.7.1-r0 | Fixed in Alpine 3.22 (jq 1.8.1); no 3.20 backport |
+| HIGH | CVE-2026-3805 | curl ≤8.14.1-r2 | No fix in Alpine 3.20 at time of writing |
+| HIGH | CVE-2025-31498 | c-ares ≤1.33.1-r0 | No fix in Alpine 3.20; curl dependency |
+| CRITICAL | CVE-2025-3277 | sqlite-libs 3.45.3-r3 | No fix in Alpine 3.20 |
+| HIGH | CVE-2025-70873 | sqlite-libs 3.45.3-r3 | No fix in Alpine 3.20 |
+| HIGH | CVE-2026-27135 | nghttp2 ≤1.62.1-r0 | No fix in Alpine 3.20; curl dependency |
+| HIGH | CVE-2025-13836 | python3 3.12.13-r0 | No fix in Alpine 3.20; kcov base image dependency |
 
 ### Updating the pinned digest
 
