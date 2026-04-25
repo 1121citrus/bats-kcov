@@ -8,6 +8,7 @@
 
 setup() {
     export BUILD_SCRIPT="${BATS_TEST_DIRNAME}/../build"
+    export REPO_ROOT="${BATS_TEST_DIRNAME}/.."
 }
 
 # ============================================================================
@@ -190,4 +191,25 @@ setup() {
         --no-test --dry-run --no-lint --no-smoke --no-scan 2>&1
     [[ $status -eq 0 ]]
     [[ "$output" != *"Stage 3c: Coverage"* ]]
+}
+
+# ============================================================================
+# Regression tests for recent bug-fix commits
+# ============================================================================
+
+@test "build _timed ignores watcher wait exit under set -e" {
+    # Regression for fix(scan): avoid exit 143 when the timed command finishes
+    # before the watchdog fires.
+    run grep -F 'wait "${_watcher}" 2>/dev/null || true' "${BUILD_SCRIPT}"
+    [[ $status -eq 0 ]]
+}
+
+@test "build loads .grype.yaml when present" {
+    run grep -F '_grype_cfg=(--config /.grype.yaml)' "${BUILD_SCRIPT}"
+    [[ $status -eq 0 ]]
+}
+
+@test ".grype.yaml gates on high severity" {
+    run grep -F 'fail-on-severity: "high"' "${REPO_ROOT}/.grype.yaml"
+    [[ $status -eq 0 ]]
 }
