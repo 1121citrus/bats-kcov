@@ -57,8 +57,13 @@ upstream Alpine package publishes a fix and the digest is updated.
 | HIGH | CVE-2025-31498 | c-ares ≤1.33.1-r0 | No fix in Alpine 3.20; curl dependency |
 | CRITICAL | CVE-2025-3277 | sqlite-libs 3.45.3-r3 | No fix in Alpine 3.20 |
 | HIGH | CVE-2025-70873 | sqlite-libs 3.45.3-r3 | No fix in Alpine 3.20 |
-| HIGH | CVE-2026-27135 | nghttp2 ≤1.62.1-r0 | No fix in Alpine 3.20; curl dependency |
+| HIGH | CVE-2026-27135 | nghttp2-libs 1.62.1-r0 | No fix in Alpine 3.20; curl dependency |
+| CRITICAL | CVE-2026-6100 | python3 3.12.13-r0 | No fix in Alpine 3.20; kcov base image dependency |
+| HIGH | CVE-2026-3298 | python3 3.12.13-r0 | No fix in Alpine 3.20; kcov base image dependency |
+| HIGH | CVE-2026-4786 | python3 3.12.13-r0 | No fix in Alpine 3.20; kcov base image dependency |
 | HIGH | CVE-2025-13836 | python3 3.12.13-r0 | No fix in Alpine 3.20; kcov base image dependency |
+| HIGH | CVE-2026-3441 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
+| HIGH | CVE-2026-3442 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
 
 ### Updating the pinned digest
 
