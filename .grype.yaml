@@ -87,7 +87,7 @@ ignore:
   # nghttp2 ≤1.62.1-r0 — no fix in Alpine 3.20; nghttp2 is a curl dependency.
   - vulnerability: CVE-2026-27135
     package:
-      name: nghttp2
+      name: nghttp2-libs
       type: apk
 
   # python3 3.12.13-r0 — no fix in Alpine 3.20.
@@ -95,4 +95,34 @@ ignore:
   - vulnerability: CVE-2025-13836
     package:
       name: python3
+      type: apk
+  - vulnerability: CVE-2026-6100
+    package:
+      name: python3
+      type: apk
+  - vulnerability: CVE-2026-3298
+    package:
+      name: python3
+      type: apk
+  - vulnerability: CVE-2026-4786
+    package:
+      name: python3
+      type: apk
+
+  # binutils / binutils-dev 2.42-r1 — no fix in Alpine 3.20.
+  - vulnerability: CVE-2026-3441
+    package:
+      name: binutils
+      type: apk
+  - vulnerability: CVE-2026-3441
+    package:
+      name: binutils-dev
+      type: apk
+  - vulnerability: CVE-2026-3442
+    package:
+      name: binutils
+      type: apk
+  - vulnerability: CVE-2026-3442
+    package:
+      name: binutils-dev
       type: apk
