@@ -2,6 +2,23 @@
 
 <!-- markdownlint-configure-file {"MD024": {"siblings_only": true}} -->
 
+## [Unreleased]
+
+### Changed
+
+* Rebase runtime image from `kcov/kcov:latest-alpine` (Alpine 3.20, EOL) to
+  `alpine:3.22` via a multi-stage build. The kcov binary is extracted from
+  the upstream image; only its verified runtime library dependencies (per
+  `ldd`) are installed in the final image.
+* Remove `python3`, `binutils`, `binutils-dev`, and `sqlite-libs` from the
+  runtime image — these were present in the kcov build stage but are not
+  runtime dependencies of the kcov binary.
+* Pin `alpine:3.22` by digest; add Dependabot tracking for the new pin.
+* Shrink `.grype.yaml` ignore list from 29 entries to 3 (busybox
+  `CVE-2025-60876`, Medium, no fix in Alpine 3.22).
+* Update `SECURITY.md` to document multi-stage architecture and revised CVE
+  table.
+
 ## [1.0.2](https://github.com/1121citrus/bats-kcov/releases/tag/v1.0.2) - 2026-05-03
 
 ### Changed

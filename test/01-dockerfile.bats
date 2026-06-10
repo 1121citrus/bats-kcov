@@ -47,8 +47,8 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
-@test "Dockerfile uses kcov/kcov as base image" {
-    run grep -E '^FROM kcov/kcov' "${DOCKERFILE}"
+@test "Dockerfile uses kcov/kcov as build stage source" {
+    run grep -E 'FROM kcov/kcov' "${DOCKERFILE}"
     [ "$status" -eq 0 ]
 }
 
