@@ -17,11 +17,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Pinned to digest for reproducibility. The tag documents the stream;
-# the digest is what Docker resolves. Dependabot tracks digest changes
-# for the latest-alpine tag and will open a PR when the upstream image updates.
+# Stage 1: extract kcov binaries from the upstream image.
+# python3, binutils, binutils-dev, and sqlite-libs are present in this image
+# for kcov's build environment but are not runtime dependencies of the kcov
+# binary itself (verified via ldd). They are not copied to the runtime stage.
 # checkov:skip=CKV_DOCKER_7: pinned by digest — tag retained for readability
-FROM kcov/kcov:latest-alpine@sha256:38605c447c7475573cb21b6e6c5339628931bde7abbc8753edd5e321801e2b66
+FROM kcov/kcov:latest-alpine@sha256:38605c447c7475573cb21b6e6c5339628931bde7abbc8753edd5e321801e2b66 AS kcov-src
+
+# Stage 2: runtime image on a supported Alpine release.
+# Only the libraries actually required by the kcov binary (per ldd) are
+# installed, plus bats and jq. Dependabot tracks digest changes for both
+# the kcov/kcov:latest-alpine and alpine:3.22 tags.
+# checkov:skip=CKV_DOCKER_7: pinned by digest — tag retained for readability
+FROM alpine:3.22@sha256:310c62b5e7ca5b08167e4384c68db0fd2905dd9c7493756d356e893909057601
 
 ARG VERSION=dev
 ENV BATS_KCOV_VERSION=${VERSION}
@@ -48,7 +56,27 @@ LABEL org.opencontainers.image.title="bats-kcov" \
 RUN apk upgrade --no-cache \
     && apk add --no-cache \
         bats \
-        jq
+        brotli-libs \
+        bzip2 \
+        c-ares \
+        elfutils \
+        jq \
+        libcurl \
+        libgcc \
+        libidn2 \
+        libpsl \
+        libstdc++ \
+        libunistring \
+        musl-fts \
+        nghttp2-libs \
+        openssl \
+        xz-libs \
+        zlib \
+        zstd-libs
+
+COPY --from=kcov-src /usr/local/bin/kcov /usr/local/bin/kcov
+COPY --from=kcov-src /usr/local/bin/kcov-system-daemon \
+    /usr/local/bin/kcov-system-daemon
 
 WORKDIR /code
 

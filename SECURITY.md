@@ -26,56 +26,56 @@ should not be applied to production workloads.
 
 ## Base image CVEs
 
-`bats-kcov` is built on `kcov/kcov:latest-alpine` (Alpine 3.20), pinned by
-digest for reproducibility. Alpine's rolling security model means packages are
-current at build time; no long-lived won't-fix CVEs are carried forward.
+`bats-kcov` uses a multi-stage build. Stage 1 pulls the kcov binary from
+`kcov/kcov:latest-alpine` (Alpine 3.20); Stage 2 builds the runtime image
+on `alpine:3.22` (a supported release), installing only the libraries
+verified as kcov runtime dependencies via `ldd`. Packages present in the
+kcov build stage but not needed at runtime — `python3`, `binutils`,
+`binutils-dev`, and `sqlite-libs` — are not carried into the final image
+and do not appear in scan results.
+
+Both upstream image digests are pinned for reproducibility. Dependabot tracks
+digest changes for both `kcov/kcov:latest-alpine` and `alpine:3.22` and will
+open a PR when either is updated.
 
 The Trivy gating scan (Stage 4) must pass with zero unfixed Critical/High
 findings. Any new fixable findings must be remediated immediately by updating
-the pinned digest to the latest `latest-alpine` image.
+the relevant pinned digest.
 
 The Grype gating scan (Stage 4b) mirrors the Trivy policy: only Critical/High
-findings block the build (`fail-on-severity: high`), and CVEs with no fix
-available in Alpine 3.20 are ignored via `.grype.yaml`. When the pinned digest
+findings block the build (`fail-on-severity: high`). CVEs with no fix
+available in Alpine 3.22 are ignored via `.grype.yaml`. When a pinned digest
 is updated, re-evaluate the ignore list and remove entries that are now fixed.
 
-### Known unfixed CVEs (Alpine 3.20)
+### Known unfixed CVEs (Alpine 3.22)
 
-The following HIGH CVEs have no patch in Alpine 3.20 at the current pinned
-digest and are suppressed in `.grype.yaml`.  Remove each entry once the
-upstream Alpine package publishes a fix and the digest is updated.
+The following CVEs have no patch in Alpine 3.22 at the current pinned digest
+and are listed in `.grype.yaml`. Remove each entry once the upstream Alpine
+package publishes a fix and the digest is updated.
 
 | Severity | CVE | Package | Reason |
 | --- | --- | --- | --- |
-| HIGH | CVE-2025-69650 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
-| HIGH | CVE-2025-69649 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
-| HIGH | CVE-2025-5245 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
-| HIGH | CVE-2025-5244 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
-| HIGH | CVE-2024-53427 | jq 1.7.1-r0 | Fixed in Alpine 3.22 (jq 1.8.1); no 3.20 backport |
-| HIGH | CVE-2025-48060 | jq 1.7.1-r0 | Fixed in Alpine 3.22 (jq 1.8.1); no 3.20 backport |
-| HIGH | CVE-2026-3805 | curl ≤8.14.1-r2 | No fix in Alpine 3.20 at time of writing |
-| HIGH | CVE-2025-31498 | c-ares ≤1.33.1-r0 | No fix in Alpine 3.20; curl dependency |
-| CRITICAL | CVE-2025-3277 | sqlite-libs 3.45.3-r3 | No fix in Alpine 3.20 |
-| HIGH | CVE-2025-70873 | sqlite-libs 3.45.3-r3 | No fix in Alpine 3.20 |
-| HIGH | CVE-2026-27135 | nghttp2-libs 1.62.1-r0 | No fix in Alpine 3.20; curl dependency |
-| CRITICAL | CVE-2026-6100 | python3 3.12.13-r0 | No fix in Alpine 3.20; kcov base image dependency |
-| HIGH | CVE-2026-3298 | python3 3.12.13-r0 | No fix in Alpine 3.20; kcov base image dependency |
-| HIGH | CVE-2026-4786 | python3 3.12.13-r0 | No fix in Alpine 3.20; kcov base image dependency |
-| HIGH | CVE-2025-13836 | python3 3.12.13-r0 | No fix in Alpine 3.20; kcov base image dependency |
-| HIGH | CVE-2026-3441 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
-| HIGH | CVE-2026-3442 | binutils / binutils-dev 2.42-r1 | No fix in Alpine 3.20; required by kcov |
+| MEDIUM | CVE-2025-60876 | busybox 1.37.x | No fix in Alpine 3.22; required Alpine base layer |
 
-### Updating the pinned digest
+### Updating pinned digests
 
-When Dependabot (or manual inspection) signals that `kcov/kcov:latest-alpine`
+When Dependabot (or manual inspection) signals that either upstream image
 has been updated, pull the new image, retrieve its digest, and update the
-`FROM` line in the `Dockerfile`:
+corresponding `FROM` line in the `Dockerfile`:
 
 ```bash
+# kcov binary source
 docker pull kcov/kcov:latest-alpine
 docker inspect kcov/kcov:latest-alpine --format '{{index .RepoDigests 0}}'
-# Update the FROM line with the new digest, then rebuild and re-run tests.
+
+# Alpine runtime base
+docker pull alpine:3.22
+docker buildx imagetools inspect alpine:3.22 --format '{{.Manifest.Digest}}'
 ```
+
+After updating either digest, rebuild, re-run tests, and re-evaluate the
+`.grype.yaml` ignore list — entries for packages that are now fixed should
+be removed.
 
 ## Docker hardening
 
