@@ -2,7 +2,7 @@
 
 <!-- markdownlint-configure-file {"MD024": {"siblings_only": true}} -->
 
-## [Unreleased]
+## [1.0.3](https://github.com/1121citrus/bats-kcov/releases/tag/v1.0.3) - 2026-06-10
 
 ### Changed
 
