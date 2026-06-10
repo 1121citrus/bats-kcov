@@ -19,6 +19,7 @@ jobs:
     uses: 1121citrus/shared-github-workflows/.github/workflows/pipeline.yml@v1
     with:
       image: 1121citrus/bats-kcov
+      inject-metadata: true
       test-mode: bats
       test-bats-files: |
         test/01-dockerfile.bats
@@ -27,11 +28,11 @@ jobs:
         test/04-bats-coverage.bats
       smoke-enabled: true
       smoke-commands: |
-        docker run --rm "${IMAGE}:${VERSION}" kcov --version
-        docker run --rm "${IMAGE}:${VERSION}" bats --version
-        docker run --rm "${IMAGE}:${VERSION}" jq --version
-        docker inspect --format '{{json .Config.Entrypoint}}' "${IMAGE}:${VERSION}" | grep -Fx 'null'
-        docker run --rm "${IMAGE}:${VERSION}" bash -c 'bats-coverage 2>&1 | grep -q "^Usage:"'
-        docker run --rm "${IMAGE}:${VERSION}" bash --version
-        docker run --rm --cap-add SYS_PTRACE --security-opt seccomp=unconfined -v "$PWD:/code:ro" -w /code "${IMAGE}:${VERSION}" bats-coverage --src /code --include /code/build,/code/bin/bats-coverage test/03-build.bats 2>&1 | grep -q 'Overall:'
+        docker run --rm "${full_image}:${VERSION}" kcov --version
+        docker run --rm "${full_image}:${VERSION}" bats --version
+        docker run --rm "${full_image}:${VERSION}" jq --version
+        docker run --rm "${full_image}:${VERSION}" bash -c 'bats-coverage 2>&1 | grep -q ^Usage:'
+        docker inspect --format '{{json .Config.Entrypoint}}' "${full_image}:${VERSION}" | grep -Fx 'null'
+        docker run --rm "${full_image}:${VERSION}" bash --version
+        docker run --rm --cap-add SYS_PTRACE --security-opt seccomp=unconfined -v "$PWD:/code:ro" -w /code "${full_image}:${VERSION}" bats-coverage --src /code --include /code/build,/code/bin/bats-coverage test/03-build.bats 2>&1 | grep -q 'Overall:'
     secrets: inherit

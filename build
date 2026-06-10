@@ -698,11 +698,17 @@ if [[ "${SMOKE}" == "true" ]]; then
         echo "[DRY RUN] docker run --rm \"${full_image}:${VERSION}\" bats --version" >&2
         echo "[DRY RUN] docker run --rm \"${full_image}:${VERSION}\" jq --version" >&2
         echo "[DRY RUN] docker run --rm \"${full_image}:${VERSION}\" bash -c 'bats-coverage 2>&1 | grep -q ^Usage:'" >&2
+        echo "[DRY RUN] docker inspect --format '{{json .Config.Entrypoint}}' \"${full_image}:${VERSION}\" | grep -Fx 'null'" >&2
+        echo "[DRY RUN] docker run --rm \"${full_image}:${VERSION}\" bash --version" >&2
+        echo "[DRY RUN] docker run --rm --cap-add SYS_PTRACE --security-opt seccomp=unconfined -v \"$PWD:/code:ro\" -w /code \"${full_image}:${VERSION}\" bats-coverage --src /code --include /code/build,/code/bin/bats-coverage test/03-build.bats 2>&1 | grep -q 'Overall:'" >&2
     else
         docker run --rm "${full_image}:${VERSION}" kcov --version
         docker run --rm "${full_image}:${VERSION}" bats --version
         docker run --rm "${full_image}:${VERSION}" jq --version
         docker run --rm "${full_image}:${VERSION}" bash -c 'bats-coverage 2>&1 | grep -q ^Usage:'
+        docker inspect --format '{{json .Config.Entrypoint}}' "${full_image}:${VERSION}" | grep -Fx 'null'
+        docker run --rm "${full_image}:${VERSION}" bash --version
+        docker run --rm --cap-add SYS_PTRACE --security-opt seccomp=unconfined -v "$PWD:/code:ro" -w /code "${full_image}:${VERSION}" bats-coverage --src /code --include /code/build,/code/bin/bats-coverage test/03-build.bats 2>&1 | grep -q 'Overall:'
     fi
 fi
 
