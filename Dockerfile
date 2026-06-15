@@ -29,7 +29,7 @@ FROM kcov/kcov:latest-alpine@sha256:38605c447c7475573cb21b6e6c5339628931bde7abbc
 # installed, plus bats and jq. Dependabot tracks digest changes for both
 # the kcov/kcov:latest-alpine and alpine:3.22 tags.
 # checkov:skip=CKV_DOCKER_7: pinned by digest — tag retained for readability
-FROM alpine:3.22@sha256:310c62b5e7ca5b08167e4384c68db0fd2905dd9c7493756d356e893909057601
+FROM alpine:3.24@sha256:a2d49ea686c2adfe3c992e47dc3b5e7fa6e6b5055609400dc2acaeb241c829f4
 
 ARG VERSION=dev
 ENV BATS_KCOV_VERSION=${VERSION}
