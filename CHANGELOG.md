@@ -2,6 +2,37 @@
 
 <!-- markdownlint-configure-file {"MD024": {"siblings_only": true}} -->
 
+## [1.0.4](https://github.com/1121citrus/bats-kcov/releases/tag/v1.0.4) - 2026-10-30
+
+### Changed
+
+* Regenerate `build` and `test/run-all` from the current generator: add a
+  bash >= 4.0 version guard, replace non-portable `readlink -f` in
+  `script_dir` resolution with a portable resolver, and fix Docker Scout
+  CVE scanning to actually gate (`--exit-code --only-severity
+  critical,high`) instead of a bare `docker scout cves` invocation that
+  always exited 0 regardless of findings. `test/run-all` now invokes
+  `bats --recursive test` and is brought fully under generator control.
+* Bump `alpine` 3.22 → 3.24 and `actions/checkout` 6.0.2 → 7.0.0
+  (Dependabot PRs #4 and #5).
+* Grant `contents: write` in `.github/workflows/ci.yml` so the shared
+  `pipeline.yml@v1` caller's promote job can start (the job's own `if`
+  guard still keeps it from running, since `auto-promote` defaults to
+  off here).
+* Add `dev` to the CI workflow's push and pull-request branch triggers.
+* Migrate `.github/workflows/ci.yml` to a single call into the shared
+  `pipeline.yml@v1` caller (bats test mode, smoke commands including an
+  entrypoint check and the E2E bats-coverage run).
+* Restrict the DockerHub push job to version-tag releases only; `staging`
+  branch pushes still run build/test/scan but no longer publish an
+  unstable tag.
+
+### Documentation
+
+* Add a "Development toolchain" section to `CLAUDE.md` directing model
+  agents to use `./build` for all CI operations instead of installing or
+  locating host-side tools.
+
 ## [1.0.3](https://github.com/1121citrus/bats-kcov/releases/tag/v1.0.3) - 2026-06-10
 
 ### Changed
