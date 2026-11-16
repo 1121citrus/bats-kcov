@@ -22,7 +22,7 @@
 # for kcov's build environment but are not runtime dependencies of the kcov
 # binary itself (verified via ldd). They are not copied to the runtime stage.
 # checkov:skip=CKV_DOCKER_7: pinned by digest — tag retained for readability
-FROM kcov/kcov:latest-alpine@sha256:38605c447c7475573cb21b6e6c5339628931bde7abbc8753edd5e321801e2b66 AS kcov-src
+FROM kcov/kcov:latest-alpine@sha256:6e6f3f62461100d789ae5b91e0534b65ff1b88f47564ee8edc845096835cd99f AS kcov-src
 
 # Stage 2: runtime image on a supported Alpine release.
 # Only the libraries actually required by the kcov binary (per ldd) are
