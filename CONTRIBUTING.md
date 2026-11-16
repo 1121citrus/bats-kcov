@@ -63,10 +63,28 @@ Non-gating Grype, Docker Scout, and Dive scans are available:
 
 ### Submitting changes
 
-1. Branch from `main`.
+1. Branch from `dev`.
 2. Make your changes.
 3. Run `./build` to lint, test, and scan.
-4. Submit a pull request targeting `main`.
+4. Submit a pull request targeting `dev`, then promote validated changes
+   through `staging` to `main`.
+
+## Protected branches and tags
+
+`main` cannot be force-pushed or deleted. The required GitHub Actions checks
+are listed in **Settings > Rules > Rulesets > Require main checks**. Missing
+or failed checks block updates; GitHub also accepts skipped and neutral
+results. The repository owner is the only actor allowed to create, update,
+or delete `v*` tags.
+
+Inspect and fix failed Actions runs before retrying. If a check is missing,
+verify that its workflow runs on the source branch. After renaming a check,
+verify the new name on a branch and update the ruleset before promoting that
+change to `main`.
+
+The required CI check names come from the `staging` workflow. A pull request
+using the older `main` workflow must include the current `staging` workflow
+changes before those checks can report.
 
 ## Release process
 
