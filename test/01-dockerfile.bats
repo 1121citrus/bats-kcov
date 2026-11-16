@@ -61,3 +61,45 @@ setup() {
     run grep -F "SYS_PTRACE" "${repo_root}/README.md"
     [ "$status" -eq 0 ]
 }
+
+@test "Dockerfile pins patched musl packages from Alpine edge" {
+    run grep -F -- '--repository=https://dl-cdn.alpinelinux.org/alpine/edge/main' "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+    run grep -F '"musl=1.2.6-r6" "musl-utils=1.2.6-r6"' "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+}
+
+@test "Dockerfile pulls only musl packages from Alpine edge" {
+    run grep -c -F -- '--repository=https://dl-cdn.alpinelinux.org/alpine/edge' "${DOCKERFILE}"
+    [ "$output" -eq 1 ]
+    run grep -F -A 1 -- '--repository=https://dl-cdn.alpinelinux.org/alpine/edge/main' "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+    [[ "${lines[1]}" =~ ^[[:space:]]*\"musl=1\.2\.6-r6\"\ \"musl-utils=1\.2\.6-r6\"\ \\$ ]]
+}
+
+@test "Dockerfile retries the edge musl install a bounded number of times" {
+    run grep -F 'for attempt in 1 2 3; do' "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+    run grep -F '[ "${attempt}" -lt 3 ] || exit 1' "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+    run grep -F 'sleep 15' "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+}
+
+@test "Dockerfile verifies installed musl version" {
+    run grep -F "apk info -v --installed musl | grep -qxF 'musl-1.2.6-r6'" \
+        "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+}
+
+@test "Dockerfile enables pipefail before the musl version check" {
+    run grep -F 'SHELL ["/bin/ash", "-o", "errexit", "-o", "pipefail", "-c"]' \
+        "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+}
+
+@test "Dockerfile documents removing the edge musl pin" {
+    run grep -F 'Remove this edge pin once Alpine 3.24 ships musl 1.2.6-r6' \
+        "${DOCKERFILE}"
+    [ "$status" -eq 0 ]
+}

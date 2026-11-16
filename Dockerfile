@@ -52,6 +52,15 @@ LABEL org.opencontainers.image.title="bats-kcov" \
 # DL3017: upgrade is intentional — applies Alpine security patches that
 # postdate the pinned base image digest; remove when upstream republishes.
 # DL3018: version pinning omitted; versions are managed via digest pin.
+#
+# Alpine 3.24 has not yet published its musl CVE-2026-107891 (High) fix.
+# Pin only the patched musl 1.2.6-r6 packages (musl and musl-utils, both
+# present in the base image) from edge; nothing else is taken from edge.
+# Remove this edge pin once Alpine 3.24 ships musl 1.2.6-r6 in its stable
+# repository.  The edge install is retried (3 attempts, 15 s apart) so a
+# single transient CDN/TLS failure does not fail the build; the build still
+# fails if every attempt fails or the wrong musl ends up installed.
+SHELL ["/bin/ash", "-o", "errexit", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3017,DL3018
 RUN apk upgrade --no-cache \
     && apk add --no-cache \
@@ -72,7 +81,17 @@ RUN apk upgrade --no-cache \
         openssl \
         xz-libs \
         zlib \
-        zstd-libs
+        zstd-libs \
+    && for attempt in 1 2 3; do \
+           apk add --no-cache \
+               --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main \
+               "musl=1.2.6-r6" "musl-utils=1.2.6-r6" \
+           && break; \
+           [ "${attempt}" -lt 3 ] || exit 1; \
+           echo "edge musl install failed (attempt ${attempt}/3)" >&2; \
+           sleep 15; \
+       done \
+    && apk info -v --installed musl | grep -qxF 'musl-1.2.6-r6'
 
 COPY --from=kcov-src /usr/local/bin/kcov /usr/local/bin/kcov
 COPY --from=kcov-src /usr/local/bin/kcov-system-daemon \

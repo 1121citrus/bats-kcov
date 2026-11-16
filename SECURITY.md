@@ -57,6 +57,17 @@ package publishes a fix and the digest is updated.
 | --- | --- | --- | --- |
 | MEDIUM | CVE-2025-60876 | busybox 1.37.x | No fix in Alpine 3.22; required Alpine base layer |
 
+### Packages pinned from Alpine edge
+
+| Severity | CVE | Package | Fixed version | Reason |
+| --- | --- | --- | --- | --- |
+| HIGH | CVE-2026-107891 | musl, musl-utils | 1.2.6-r6 | Not yet in Alpine 3.24 |
+
+The `Dockerfile` installs only `musl=1.2.6-r6` and `musl-utils=1.2.6-r6`
+from `https://dl-cdn.alpinelinux.org/alpine/edge/main`; no other package is
+taken from edge. The build fails unless `musl-1.2.6-r6` is installed.
+Remove the edge pin once Alpine 3.24 publishes musl 1.2.6-r6.
+
 ### Updating pinned digests
 
 When Dependabot (or manual inspection) signals that either upstream image

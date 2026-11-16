@@ -2,6 +2,20 @@
 
 <!-- markdownlint-configure-file {"MD024": {"siblings_only": true}} -->
 
+## [Unreleased]
+
+### Security
+
+* Install `musl` and `musl-utils` 1.2.6-r6 from Alpine edge in the runtime
+  stage, fixing CVE-2026-107891 (High, reported by Docker Scout against
+  musl 1.2.6-r3). Alpine 3.24 has not yet published r6. Only these two
+  packages come from edge; the install is retried a bounded number of
+  times (3 attempts, 15 s apart) and the build fails unless
+  `musl-1.2.6-r6` is installed. Remove the edge pin once Alpine 3.24 ships
+  r6.
+* Run the runtime-stage `RUN` with `ash -o errexit -o pipefail` so the musl
+  version check cannot be masked by a pipe.
+
 ## [1.0.4](https://github.com/1121citrus/bats-kcov/releases/tag/v1.0.4) - 2026-10-30
 
 ### Changed
